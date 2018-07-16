@@ -1,0 +1,24 @@
+---
+repos:
+  - repo: https://github.com/adrienverge/yamllint.git
+    sha: v1.11.1
+    hooks:
+      - id: yamllint
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    sha: v1.3.0
+    hooks:
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: no-commit-to-branch
+        args: [--branch=master]
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-xml
+  - repo: https://github.com/pre-commit/mirrors-pylint
+    rev: 'v1.9.1'
+    hooks:
+      - id: pylint
+        args: [--rcfile=.pylintrc, --max-line-length=100]
