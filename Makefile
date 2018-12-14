@@ -9,3 +9,6 @@ initialize-development:
 # Run pre-commit for all
 pre-commit:
 	@pre-commit run --all-files
+
+run-test:
+	@python -m unittest discover

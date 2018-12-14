@@ -16,7 +16,7 @@ class GrpcMethod(object):
     # https://grpc.io/grpc-java/javadoc/io/grpc/MethodDescriptor.MethodType.html
     """
 
-    if request_streaming and not response_streaming:
+    if request_streaming and response_streaming:
       return BIDI_STREAMING
     elif request_streaming and not response_streaming:
       return CLIENT_STREAMING
