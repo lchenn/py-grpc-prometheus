@@ -7,14 +7,14 @@ Instrument library to provide prometheus metrics similar to:
 
 
 ## Status
-Currently, the library has the parity metrics in the client side, missing a few server side metrics.
+Currently, the library has the parity metrics with the Java and Go library.
 
 ### Server side:
 - grpc_server_started_total
-- ~~grpc_server_handled_total~~
+- grpc_server_handled_total
 - grpc_server_handled_latency_seconds
-- ~~grpc_server_msg_received_total~~
-- ~~grpc_server_msg_sent_total~~
+- grpc_server_msg_received_total
+- grpc_server_msg_sent_total
 
 ### Client side:
 - grpc_client_started_total
@@ -78,7 +78,10 @@ python -m tests.integration.hello_world.hello_world_client
 3. Open http://localhost:50052 for the server side metrics
 4. Open http://localhost:50053 for the client side metrics
 
+## TODO:
+- Unit test with https://github.com/census-instrumentation/opencensus-python/blob/master/tests/unit/trace/ext/grpc/test_server_interceptor.py
 
 ## Reference
 - https://grpc.io/grpc/python/grpc.html
 - https://github.com/census-instrumentation/opencensus-python/blob/master/opencensus/trace/ext/grpc/utils.py
+- https://github.com/opentracing-contrib/python-grpc/blob/b4bdc7ce81fa75ede00f7c6bcf5dab8fae47332a/grpc_opentracing/grpcext/grpc_interceptor/server_interceptor.py
