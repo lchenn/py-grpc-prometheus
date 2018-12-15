@@ -42,7 +42,8 @@ start_http_server(metrics_port)
 ```
 
 ## Server side:
-Server metrics are exposed by adding the interceptor when the gRPC server is started.
+Server metrics are exposed by adding the interceptor when the gRPC server is started. Take a look at
+`tests/integration/hello_world/hello_world_client.py` for the complete example.
 
 ```python
 import grpc
@@ -51,7 +52,8 @@ from py_grpc_prometheus.prometheus_server_interceptor import PromServerIntercept
 from prometheus_client import start_http_server
 ```
 
-Start the gRPC server with the interceptor
+Start the gRPC server with the interceptor, take a look at
+`tests/integration/hello_world/hello_world_server.py` for the complete example.
 
 ```python
 server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
