@@ -23,6 +23,8 @@ def call_server():
   # Call the unary stream.
   print("Running Unary Stream client")
   response_iter = stub.SayHelloUnaryStream(hello_world_pb2.HelloRequest(name='unary stream'))
+  print("Response for Unary Stream")
+  print(response_iter)
   for response in response_iter:
     print("Unary Stream response item: " + response.message)
   print("")

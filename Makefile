@@ -26,7 +26,7 @@ compile-protos:
       tests/integration/protos/*.proto
 
 run-test-server:
-	python -m tests.integration.hello_world.hello_world_sever
+	python -m tests.integration.hello_world.hello_world_server
 
 run-test-client:
 	python -m tests.integration.hello_world.hello_world_client

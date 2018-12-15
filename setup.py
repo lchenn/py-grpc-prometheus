@@ -9,8 +9,7 @@ setup(name='py_grpc_prometheus',
       author_email='linchen04@gmail.com',
       install_requires=[
           'setuptools==39.0.1',
-          'protobuf==3.5.2',
-          'grpcio==1.10.0',
+          'grpcio>=1.10.0',
           'prometheus_client==0.3.0'
       ],
       url='',
