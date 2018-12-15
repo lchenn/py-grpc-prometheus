@@ -7,17 +7,20 @@ Instrument library to provide prometheus metrics similar to:
 
 Currently, the library supports only the unary calls, and it exposes the following metrics:
 
-Server side:
+## Server side:
 - grpc_server_started_total
 - ~~grpc_server_handled_total~~
 - grpc_server_handled_latency_seconds
 - ~~grpc_server_msg_received_total~~
 - ~~grpc_server_msg_sent_total~~
 
-Client side:
+## Client side:
 - grpc_client_started_total
 - grpc_client_completed
 - grpc_client_completed_latency_seconds
+
+- grpc_client_msg_sent_total
+- grpc_client_msg_received_total
 
 ## How to use
 
@@ -56,6 +59,22 @@ server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
 # Start an end point to expose metrics.
 start_http_server(metrics_port)
 ```
+
+## How to run and test
+1. Run the testing server
+
+```bash
+python -m tests.integration.hello_world.hello_world_sever
+```
+
+2. Run the testing client
+```bash
+python -m tests.integration.hello_world.hello_world_client
+```
+
+3. Open http://localhost:50052 for the server side metrics
+4. Open http://localhost:50053 for the client side metrics
+
 
 ## Reference
 https://grpc.io/grpc/python/grpc.html

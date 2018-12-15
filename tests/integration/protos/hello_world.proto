@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting.
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+
+  // Sends one greeting, get multiple response.
+  rpc SayHelloUnaryStream (HelloRequest) returns (stream HelloReply) {}
+
+  // Send multiple greetings, get one response.
+  rpc SayHelloStreamUnary (stream HelloRequest) returns (HelloReply) {}
+
+  // Send multiple greetings, get multiple response.
+  rpc SayHelloBidiStream(stream HelloRequest) returns (stream HelloReply) {}
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}
