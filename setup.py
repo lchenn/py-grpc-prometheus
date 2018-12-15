@@ -3,7 +3,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 setup(name='py_grpc_prometheus',
-      version='0.0.1',
+      version='0.0.2',
       description='Python gRPC Prometheus Interceptors',
       author='Lin Chen',
       author_email='linchen04@gmail.com',

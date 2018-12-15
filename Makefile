@@ -30,3 +30,7 @@ run-test-server:
 
 run-test-client:
 	python -m tests.integration.hello_world.hello_world_client
+
+publish:
+	python setup.py sdist bdist_wheel
+	twine upload dist/*
