@@ -5,16 +5,18 @@ Instrument library to provide prometheus metrics similar to:
 - https://github.com/grpc-ecosystem/java-grpc-prometheus
 - https://github.com/grpc-ecosystem/go-grpc-prometheus
 
-Currently, the library supports only the unary calls, and it exposes the following metrics:
 
-## Server side:
+## Status
+Currently, the library has the parity metrics in the client side, missing a few server side metrics.
+
+### Server side:
 - grpc_server_started_total
 - ~~grpc_server_handled_total~~
 - grpc_server_handled_latency_seconds
 - ~~grpc_server_msg_received_total~~
 - ~~grpc_server_msg_sent_total~~
 
-## Client side:
+### Client side:
 - grpc_client_started_total
 - grpc_client_completed
 - grpc_client_completed_latency_seconds
