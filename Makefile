@@ -32,6 +32,9 @@ run-test-client:
 	python -m tests.integration.hello_world.hello_world_client
 
 publish:
+	# Markdown checker
+	# pip install cmarkgfm
 	rm -rf *.egg-info build dist
 	python setup.py sdist bdist_wheel
+	twine check dist/*
 	twine upload dist/*
