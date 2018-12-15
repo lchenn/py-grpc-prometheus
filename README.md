@@ -18,7 +18,6 @@ Currently, the library supports only the unary calls, and it exposes the followi
 - grpc_client_started_total
 - grpc_client_completed
 - grpc_client_completed_latency_seconds
-
 - grpc_client_msg_sent_total
 - grpc_client_msg_received_total
 
@@ -79,4 +78,5 @@ python -m tests.integration.hello_world.hello_world_client
 
 
 ## Reference
-https://grpc.io/grpc/python/grpc.html
+- https://grpc.io/grpc/python/grpc.html
+- https://github.com/census-instrumentation/opencensus-python/blob/master/opencensus/trace/ext/grpc/utils.py
