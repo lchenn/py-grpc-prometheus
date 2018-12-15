@@ -32,5 +32,6 @@ run-test-client:
 	python -m tests.integration.hello_world.hello_world_client
 
 publish:
+	rm -rf *.egg-info build dist
 	python setup.py sdist bdist_wheel
 	twine upload dist/*
