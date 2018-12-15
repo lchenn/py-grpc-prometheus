@@ -1,0 +1,9 @@
+---
+language: python
+python:
+  - "3.6"
+install:
+  - "pip install -r requirements.txt"
+  - "pip install pylint"
+script:
+  - "make pre-commit run-test"
