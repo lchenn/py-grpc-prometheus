@@ -17,5 +17,5 @@ class TestGrpcMethod(TestCase):
     self.assertEqual(GrpcMethod.get_method_type(False, False), grpc_method.UNARY)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   unittest.main()

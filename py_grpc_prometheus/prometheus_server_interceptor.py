@@ -84,7 +84,7 @@ class PromServerInterceptor(grpc.ServerInterceptor):
 
   #pylint: disable=protected-access
   def _compute_status_code(self, servicer_context):
-    if servicer_context._state.client == 'cancelled':
+    if servicer_context._state.client == "cancelled":
       return grpc.StatusCode.CANCELLED
 
     if servicer_context._state.code is None:
