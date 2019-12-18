@@ -1,11 +1,11 @@
 ---
 repos:
   - repo: https://github.com/adrienverge/yamllint.git
-    sha: v1.11.1
+    rev: v1.19.0
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    sha: v1.3.0
+    rev: v2.4.0
     hooks:
       - id: check-case-conflict
       - id: check-merge-conflict
@@ -18,7 +18,7 @@ repos:
       - id: check-json
       - id: check-xml
   - repo: https://github.com/pre-commit/mirrors-pylint
-    rev: 'v1.9.1'
+    rev: 'v2.4.4'
     hooks:
       - id: pylint
         args: [--rcfile=.pylintrc, --max-line-length=100]
