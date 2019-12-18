@@ -13,9 +13,9 @@ setup(name="py_grpc_prometheus",
       author="Lin Chen",
       author_email="linchen04@gmail.com",
       install_requires=[
-          "setuptools==39.0.1",
+          "setuptools>=39.0.1",
           "grpcio>=1.10.0",
-          "prometheus_client==0.3.0"
+          "prometheus_client>=0.3.0"
       ],
       url="https://github.com/lchenn/py-grpc-prometheus",
       packages=find_packages(exclude=["tests.*", "tests"]),
