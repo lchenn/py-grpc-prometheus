@@ -6,10 +6,10 @@ import grpc
 
 import py_grpc_prometheus.grpc_utils as grpc_utils
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_LATENCY_SECONDS
-from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_TOTAL_COUNTER
+from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_COUNTER
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_MSG_RECEIVED_TOTAL_COUNTER
-from py_grpc_prometheus.server_metrics import GRPC_SERVER_MSG_SENT_TOTAL_COUNTER
-from py_grpc_prometheus.server_metrics import GRPC_SERVER_STARTED_TOTAL_COUNTER
+from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_RECEIVED
+from py_grpc_prometheus.server_metrics import GRPC_SERVER_STARTED_COUNTER
 
 
 class PromServerInterceptor(grpc.ServerInterceptor):
@@ -41,7 +41,7 @@ class PromServerInterceptor(grpc.ServerInterceptor):
                 grpc_service_name,
                 grpc_method_name)
           else:
-            GRPC_SERVER_STARTED_TOTAL_COUNTER.labels(
+            GRPC_SERVER_STARTED_COUNTER.labels(
                 grpc_type=grpc_type,
                 grpc_service=grpc_service_name,
                 grpc_method=grpc_method_name) \
@@ -53,19 +53,19 @@ class PromServerInterceptor(grpc.ServerInterceptor):
           if response_streaming:
             response_or_iterator = grpc_utils.wrap_iterator_inc_counter(
                 response_or_iterator,
-                GRPC_SERVER_MSG_SENT_TOTAL_COUNTER,
+                GRPC_SERVER_STREAM_MSG_RECEIVED,
                 grpc_type,
                 grpc_service_name,
                 grpc_method_name)
           else:
-            GRPC_SERVER_HANDLED_TOTAL_COUNTER.labels(
+            GRPC_SERVER_HANDLED_COUNTER.labels(
                 grpc_type=grpc_type,
                 grpc_service=grpc_service_name,
                 grpc_method=grpc_method_name,
                 code=self._compute_status_code(servicer_context).name).inc()
           return response_or_iterator
         except grpc.RpcError as e:
-          GRPC_SERVER_HANDLED_TOTAL_COUNTER.labels(
+          GRPC_SERVER_HANDLED_COUNTER.labels(
               grpc_type=grpc_type,
               grpc_service=grpc_service_name,
               grpc_method=grpc_method_name,
