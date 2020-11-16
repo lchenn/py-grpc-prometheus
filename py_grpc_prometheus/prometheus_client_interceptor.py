@@ -26,7 +26,6 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
     self._enable_client_handling_time_histogram = enable_client_handling_time_histogram
     self._enable_client_stream_receive_time_histogram = enable_client_stream_receive_time_histogram
     self._enable_client_stream_send_time_histogram = enable_client_stream_send_time_histogram
-    super().__init__()
 
   def intercept_unary_unary(self, continuation, client_call_details, request):
     grpc_service_name, grpc_method_name, _ = grpc_utils.split_method_call(client_call_details)

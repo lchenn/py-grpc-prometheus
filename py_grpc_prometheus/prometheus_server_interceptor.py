@@ -16,7 +16,6 @@ class PromServerInterceptor(grpc.ServerInterceptor):
 
   def __init__(self, enable_handling_time_histogram=False):
     self._enable_handling_time_histogram = enable_handling_time_histogram
-    super().__init__()
 
   def intercept_service(self, continuation, handler_call_details):
     """
