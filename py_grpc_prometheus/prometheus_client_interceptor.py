@@ -5,11 +5,11 @@ from timeit import default_timer
 import grpc
 
 import py_grpc_prometheus.grpc_utils as grpc_utils
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_COMPLETED_COUNTER
+from py_grpc_prometheus.client_metrics import GRPC_CLIENT_HANDLED_COUNTER
 from py_grpc_prometheus.client_metrics import GRPC_CLIENT_COMPLETED_LATENCY_SECONDS_HISTOGRAM
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_MSG_RECEIVED_TOTAL_COUNTER
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_MSG_SENT_TOTAL_COUNTER
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_STARTED_TOTAL_COUNTER
+from py_grpc_prometheus.client_metrics import GRPC_CLIENT_STREAM_MSG_RECEIVED
+from py_grpc_prometheus.client_metrics import GRPC_CLIENT_STREAM_MSG_SENT
+from py_grpc_prometheus.client_metrics import GRPC_CLIENT_STARTED_COUNTER
 
 
 class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
@@ -24,7 +24,7 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
     grpc_service_name, grpc_method_name, _ = grpc_utils.split_method_call(client_call_details)
     grpc_type = grpc_utils.UNARY
 
-    GRPC_CLIENT_STARTED_TOTAL_COUNTER.labels(
+    GRPC_CLIENT_STARTED_COUNTER.labels(
         grpc_type=grpc_type,
         grpc_service=grpc_service_name,
         grpc_method=grpc_method_name).inc()
@@ -36,7 +36,7 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
         grpc_type=grpc_type,
         grpc_service=grpc_service_name,
         grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
-    GRPC_CLIENT_COMPLETED_COUNTER.labels(
+    GRPC_CLIENT_HANDLED_COUNTER.labels(
         grpc_type=grpc_type,
         grpc_service=grpc_service_name,
         grpc_method=grpc_method_name,
@@ -47,7 +47,7 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
     grpc_service_name, grpc_method_name, _ = grpc_utils.split_method_call(client_call_details)
     grpc_type = grpc_utils.SERVER_STREAMING
 
-    GRPC_CLIENT_STARTED_TOTAL_COUNTER.labels(
+    GRPC_CLIENT_STARTED_COUNTER.labels(
         grpc_type=grpc_type,
         grpc_service=grpc_service_name,
         grpc_method=grpc_method_name).inc()
@@ -61,7 +61,7 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
 
     return grpc_utils.wrap_iterator_inc_counter(
         handler,
-        GRPC_CLIENT_MSG_RECEIVED_TOTAL_COUNTER,
+        GRPC_CLIENT_STREAM_MSG_RECEIVED,
         grpc_type,
         grpc_service_name,
         grpc_method_name)
@@ -72,14 +72,14 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
 
     request_iterator = grpc_utils.wrap_iterator_inc_counter(
         request_iterator,
-        GRPC_CLIENT_MSG_SENT_TOTAL_COUNTER,
+        GRPC_CLIENT_STREAM_MSG_SENT,
         grpc_type,
         grpc_service_name,
         grpc_method_name)
 
     start = default_timer()
     handler = continuation(client_call_details, request_iterator)
-    GRPC_CLIENT_STARTED_TOTAL_COUNTER.labels(
+    GRPC_CLIENT_STARTED_COUNTER.labels(
         grpc_type=grpc_type,
         grpc_service=grpc_service_name,
         grpc_method=grpc_method_name).inc()
@@ -97,13 +97,13 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
         client_call_details,
         grpc_utils.wrap_iterator_inc_counter(
             request_iterator,
-            GRPC_CLIENT_MSG_SENT_TOTAL_COUNTER,
+            GRPC_CLIENT_STREAM_MSG_SENT,
             grpc_type,
             grpc_service_name,
             grpc_method_name))
     return grpc_utils.wrap_iterator_inc_counter(
         response_iterator,
-        GRPC_CLIENT_MSG_RECEIVED_TOTAL_COUNTER,
+        GRPC_CLIENT_STREAM_MSG_RECEIVED,
         grpc_type,
         grpc_service_name,
         grpc_method_name)
