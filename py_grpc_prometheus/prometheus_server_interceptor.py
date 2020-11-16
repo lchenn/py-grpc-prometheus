@@ -5,11 +5,11 @@ from timeit import default_timer
 import grpc
 
 import py_grpc_prometheus.grpc_utils as grpc_utils
-from py_grpc_prometheus.server_metrics import GRPC_SERVER_STARTED_COUNTER
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_COUNTER
+from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_HISTOGRAM
+from py_grpc_prometheus.server_metrics import GRPC_SERVER_STARTED_COUNTER
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_RECEIVED
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_SENT
-from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_HISTOGRAM
 
 
 class PromServerInterceptor(grpc.ServerInterceptor):
@@ -52,9 +52,9 @@ class PromServerInterceptor(grpc.ServerInterceptor):
               grpc_method_name)
           else:
             GRPC_SERVER_STARTED_COUNTER.labels(
-                grpc_type=grpc_type,
-                grpc_service=grpc_service_name,
-                grpc_method=grpc_method_name) \
+              grpc_type=grpc_type,
+              grpc_service=grpc_service_name,
+              grpc_method=grpc_method_name) \
               .inc()
 
           # Invoke the original rpc behavior.
@@ -75,32 +75,33 @@ class PromServerInterceptor(grpc.ServerInterceptor):
               grpc_method_name)
           else:
             GRPC_SERVER_HANDLED_COUNTER.labels(
-                grpc_type=grpc_type,
-                grpc_service=grpc_service_name,
-                grpc_method=grpc_method_name,
-                code=self._compute_status_code(servicer_context).name).inc()
-          return response_or_iterator
-        except grpc.RpcError as e:
-          GRPC_SERVER_HANDLED_COUNTER.labels(
               grpc_type=grpc_type,
               grpc_service=grpc_service_name,
               grpc_method=grpc_method_name,
-              code=self._compute_error_code(e)).inc()
+              code=self._compute_status_code(servicer_context).name).inc()
+          return response_or_iterator
+        except grpc.RpcError as e:
+          GRPC_SERVER_HANDLED_COUNTER.labels(
+            grpc_type=grpc_type,
+            grpc_service=grpc_service_name,
+            grpc_method=grpc_method_name,
+            code=self._compute_error_code(e)).inc()
           raise e
         finally:
           if not response_streaming and self._enable_handling_time_histogram:
             GRPC_SERVER_HANDLED_HISTOGRAM.labels(
-                grpc_type=grpc_type,
-                grpc_service=grpc_service_name,
-                grpc_method=grpc_method_name) \
+              grpc_type=grpc_type,
+              grpc_service=grpc_service_name,
+              grpc_method=grpc_method_name) \
               .observe(max(default_timer() - start, 0))
+
       return new_behavior
 
     optional_any = self._wrap_rpc_behavior(continuation(handler_call_details), metrics_wrapper)
 
     return optional_any
 
-  #pylint: disable=protected-access
+  # pylint: disable=protected-access
   def _compute_status_code(self, servicer_context):
     if servicer_context._state.client == "cancelled":
       return grpc.StatusCode.CANCELLED
@@ -135,6 +136,6 @@ class PromServerInterceptor(grpc.ServerInterceptor):
       handler_factory = grpc.unary_unary_rpc_method_handler
 
     return handler_factory(
-        fn(behavior_fn, handler.request_streaming, handler.response_streaming),
-        request_deserializer=handler.request_deserializer,
-        response_serializer=handler.response_serializer)
+      fn(behavior_fn, handler.request_streaming, handler.response_streaming),
+      request_deserializer=handler.request_deserializer,
+      response_serializer=handler.response_serializer)
