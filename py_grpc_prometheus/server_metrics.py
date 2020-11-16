@@ -21,7 +21,7 @@ GRPC_SERVER_STREAM_MSG_SENT = Counter(
     "Total number of gRPC stream messages sent by the server.",
     ["grpc_type", "grpc_service", "grpc_method"])
 
-GRPC_SERVER_HANDLED_LATENCY_SECONDS = Histogram(
+GRPC_SERVER_HANDLED_HISTOGRAM = Histogram(
     "grpc_server_handling_seconds",
     "Histogram of response latency (seconds) of gRPC that had been application-level handled by the server.",
     ["grpc_type", "grpc_service", "grpc_method"])

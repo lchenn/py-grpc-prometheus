@@ -5,14 +5,18 @@ from timeit import default_timer
 import grpc
 
 import py_grpc_prometheus.grpc_utils as grpc_utils
-from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_LATENCY_SECONDS
-from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_COUNTER
-from py_grpc_prometheus.server_metrics import GRPC_SERVER_MSG_RECEIVED_TOTAL_COUNTER
-from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_RECEIVED
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_STARTED_COUNTER
+from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_COUNTER
+from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_RECEIVED
+from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_SENT
+from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_HISTOGRAM
 
 
 class PromServerInterceptor(grpc.ServerInterceptor):
+
+  def __init__(self, enable_handling_time_histogram=False):
+    self._enable_handling_time_histogram = enable_handling_time_histogram
+    super().__init__()
 
   def intercept_service(self, continuation, handler_call_details):
     """
@@ -35,11 +39,17 @@ class PromServerInterceptor(grpc.ServerInterceptor):
         try:
           if request_streaming:
             request_or_iterator = grpc_utils.wrap_iterator_inc_counter(
-                request_or_iterator,
-                GRPC_SERVER_MSG_RECEIVED_TOTAL_COUNTER,
-                grpc_type,
-                grpc_service_name,
-                grpc_method_name)
+              request_or_iterator,
+              GRPC_SERVER_STREAM_MSG_RECEIVED,
+              grpc_type,
+              grpc_service_name,
+              grpc_method_name)
+            request_or_iterator = grpc_utils.wrap_iterator_inc_counter(
+              request_or_iterator,
+              GRPC_SERVER_STREAM_MSG_SENT,
+              grpc_type,
+              grpc_service_name,
+              grpc_method_name)
           else:
             GRPC_SERVER_STARTED_COUNTER.labels(
                 grpc_type=grpc_type,
@@ -52,11 +62,17 @@ class PromServerInterceptor(grpc.ServerInterceptor):
 
           if response_streaming:
             response_or_iterator = grpc_utils.wrap_iterator_inc_counter(
-                response_or_iterator,
-                GRPC_SERVER_STREAM_MSG_RECEIVED,
-                grpc_type,
-                grpc_service_name,
-                grpc_method_name)
+              response_or_iterator,
+              GRPC_SERVER_STREAM_MSG_RECEIVED,
+              grpc_type,
+              grpc_service_name,
+              grpc_method_name)
+            response_or_iterator = grpc_utils.wrap_iterator_inc_counter(
+              response_or_iterator,
+              GRPC_SERVER_STREAM_MSG_SENT,
+              grpc_type,
+              grpc_service_name,
+              grpc_method_name)
           else:
             GRPC_SERVER_HANDLED_COUNTER.labels(
                 grpc_type=grpc_type,
@@ -72,15 +88,17 @@ class PromServerInterceptor(grpc.ServerInterceptor):
               code=self._compute_error_code(e)).inc()
           raise e
         finally:
-          if not response_streaming:
-            GRPC_SERVER_HANDLED_LATENCY_SECONDS.labels(
+          if not response_streaming and self._enable_handling_time_histogram:
+            GRPC_SERVER_HANDLED_HISTOGRAM.labels(
                 grpc_type=grpc_type,
                 grpc_service=grpc_service_name,
                 grpc_method=grpc_method_name) \
               .observe(max(default_timer() - start, 0))
       return new_behavior
 
-    return self._wrap_rpc_behavior(continuation(handler_call_details), metrics_wrapper)
+    optional_any = self._wrap_rpc_behavior(continuation(handler_call_details), metrics_wrapper)
+
+    return optional_any
 
   #pylint: disable=protected-access
   def _compute_status_code(self, servicer_context):
