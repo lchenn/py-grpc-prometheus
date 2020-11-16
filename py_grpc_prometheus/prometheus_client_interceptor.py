@@ -69,12 +69,19 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
 
-    return grpc_utils.wrap_iterator_inc_counter(
+    handler = grpc_utils.wrap_iterator_inc_counter(
         handler,
         GRPC_CLIENT_STREAM_MSG_RECEIVED,
         grpc_type,
         grpc_service_name,
         grpc_method_name)
+    if self._enable_client_stream_receive_time_histogram:
+      GRPC_CLIENT_STREAM_RECV_HISTOGRAM.labels(
+        grpc_type=grpc_type,
+        grpc_service=grpc_service_name,
+        grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
+
+    return handler
 
   def intercept_stream_unary(self, continuation, client_call_details, request_iterator):
     grpc_service_name, grpc_method_name, _ = grpc_utils.split_method_call(client_call_details)
@@ -98,12 +105,18 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
+    if self._enable_client_stream_send_time_histogram:
+      GRPC_CLIENT_STREAM_SEND_HISTOGRAM.labels(
+        grpc_type=grpc_type,
+        grpc_Service=grpc_service_name,
+        grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
     return handler
 
   def intercept_stream_stream(self, continuation, client_call_details, request_iterator):
     grpc_service_name, grpc_method_name, _ = grpc_utils.split_method_call(
         client_call_details)
     grpc_type = grpc_utils.BIDI_STREAMING
+    start = default_timer()
     response_iterator = continuation(
         client_call_details,
         grpc_utils.wrap_iterator_inc_counter(
@@ -112,9 +125,24 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
             grpc_type,
             grpc_service_name,
             grpc_method_name))
-    return grpc_utils.wrap_iterator_inc_counter(
+
+    if self._enable_client_stream_send_time_histogram:
+      GRPC_CLIENT_STREAM_SEND_HISTOGRAM.labels(
+        grpc_type=grpc_type,
+        grpc_Service=grpc_service_name,
+        grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
+
+    response_iterator = grpc_utils.wrap_iterator_inc_counter(
         response_iterator,
         GRPC_CLIENT_STREAM_MSG_RECEIVED,
         grpc_type,
         grpc_service_name,
         grpc_method_name)
+
+    if self._enable_client_stream_receive_time_histogram:
+      GRPC_CLIENT_STREAM_RECV_HISTOGRAM.labels(
+        grpc_type=grpc_type,
+        grpc_service=grpc_service_name,
+        grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
+
+    return response_iterator
