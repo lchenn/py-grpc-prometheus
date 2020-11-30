@@ -98,6 +98,7 @@ variable `grpc_server_handling_seconds`. The histogram variable contains three s
 ## Legacy metrics:
 
 Metric names have been updated to be in line with those from https://github.com/grpc-ecosystem/go-grpc-prometheus.
+
 The legacy metrics are:
 
 ### server side:
