@@ -95,6 +95,32 @@ variable `grpc_server_handling_seconds`. The histogram variable contains three s
 - enable_client_stream_receive_time_histogram: Enables 'grpc_client_msg_recv_handling_seconds'
 - enable_client_stream_send_time_histogram: Enables 'grpc_client_msg_send_handling_seconds'
 
+## Legacy metrics:
+
+Metric names have been updated to be in line with those from https://github.com/grpc-ecosystem/go-grpc-prometheus.
+The legacy metrics are:
+
+### server side:
+- grpc_server_started_total
+- grpc_server_handled_total
+- grpc_server_handled_latency_seconds
+- grpc_server_msg_received_total
+- grpc_server_msg_sent_total
+
+### client side:
+- grpc_client_started_total
+- grpc_client_completed
+- grpc_client_completed_latency_seconds
+- grpc_client_msg_sent_total
+- grpc_client_msg_received_total
+
+In order to be able to use these legacy metrics for backwards compatibility, the `legacy` flag can be set to `True` when initialising the server/client interceptors
+
+For example, to enable the server side legacy metrics:
+```jsoniq
+server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
+                     interceptors=(PromServerInterceptor(legacy=True),))
+```
 
 ## How to run and test
 1. Run the testing server
