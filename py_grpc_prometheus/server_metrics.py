@@ -43,13 +43,13 @@ LEGACY_GRPC_SERVER_HANDLED_LATENCY_SECONDS = Histogram(
   "application-level handled by the server",
   ["grpc_type", "grpc_service", "grpc_method"])
 
-LEGACY_GRPC_MSG_RECEIVED_TOTAL_COUNTER = Counter(
+LEGACY_GRPC_SERVER_MSG_RECEIVED_TOTAL_COUNTER = Counter(
   "grpc_server_msg_received_total",
   "Histogram of response latency (seconds) of gRPC that had been application-level "
   "handled by the server.",
   ["grpc_type", "grpc_service", "grpc_method"])
 
-LEGACY_GRPC_MSG_SENT_TOTAL_COUNTER = Counter(
+LEGACY_GRPC_SERVER_MSG_SENT_TOTAL_COUNTER = Counter(
   "grpc_server_msg_sent_total",
   "Total number of stream messages sent by the server.",
   ["grpc_type", "grpc_service", "grpc_method"])
