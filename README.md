@@ -12,16 +12,18 @@ Currently, the library has the parity metrics with the Java and Go library.
 ### Server side:
 - grpc_server_started_total
 - grpc_server_handled_total
-- grpc_server_handled_latency_seconds
 - grpc_server_msg_received_total
 - grpc_server_msg_sent_total
+- grpc_server_handling_seconds
 
 ### Client side:
 - grpc_client_started_total
-- grpc_client_completed
-- grpc_client_completed_latency_seconds
-- grpc_client_msg_sent_total
+- grpc_client_handled_total
 - grpc_client_msg_received_total
+- grpc_client_msg_sent_total
+- grpc_client_handling_seconds
+- grpc_client_msg_recv_handling_seconds
+- grpc_client_msg_send_handling_seconds
 
 ## How to use
 
@@ -61,6 +63,64 @@ server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
                          interceptors=(PromServerInterceptor(),))
 # Start an end point to expose metrics.
 start_http_server(metrics_port)
+```
+
+## Histograms
+
+[Prometheus histograms](https://prometheus.io/docs/concepts/metric_types/#histogram) are a great way
+to measure latency distributions of your RPCs. However, since it is bad practice to have metrics
+of [high cardinality](https://prometheus.io/docs/practices/instrumentation/#do-not-overuse-labels)
+the latency monitoring metrics are disabled by default. To enable them please call the following
+in your interceptor initialization code:
+
+```jsoniq
+server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
+                     interceptors=(PromServerInterceptor(enable_handling_time_histogram=True),))
+```
+
+After the call completes, its handling time will be recorded in a [Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram)
+variable `grpc_server_handling_seconds`. The histogram variable contains three sub-metrics:
+
+ * `grpc_server_handling_seconds_count` - the count of all completed RPCs by status and method 
+ * `grpc_server_handling_seconds_sum` - cumulative time of RPCs by status and method, useful for 
+   calculating average handling times
+ * `grpc_server_handling_seconds_bucket` - contains the counts of RPCs by status and method in respective
+   handling-time buckets. These buckets can be used by Prometheus to estimate SLAs (see [here](https://prometheus.io/docs/practices/histograms/))
+
+## Server Side:
+- enable_handling_time_histogram: Enables 'grpc_server_handling_seconds'
+
+## Client Side:
+- enable_client_handling_time_histogram: Enables 'grpc_client_handling_seconds'
+- enable_client_stream_receive_time_histogram: Enables 'grpc_client_msg_recv_handling_seconds'
+- enable_client_stream_send_time_histogram: Enables 'grpc_client_msg_send_handling_seconds'
+
+## Legacy metrics:
+
+Metric names have been updated to be in line with those from https://github.com/grpc-ecosystem/go-grpc-prometheus.
+
+The legacy metrics are:
+
+### server side:
+- grpc_server_started_total
+- grpc_server_handled_total
+- grpc_server_handled_latency_seconds
+- grpc_server_msg_received_total
+- grpc_server_msg_sent_total
+
+### client side:
+- grpc_client_started_total
+- grpc_client_completed
+- grpc_client_completed_latency_seconds
+- grpc_client_msg_sent_total
+- grpc_client_msg_received_total
+
+In order to be able to use these legacy metrics for backwards compatibility, the `legacy` flag can be set to `True` when initialising the server/client interceptors
+
+For example, to enable the server side legacy metrics:
+```jsoniq
+server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
+                     interceptors=(PromServerInterceptor(legacy=True),))
 ```
 
 ## How to run and test
