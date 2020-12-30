@@ -36,7 +36,7 @@ def serve():
   logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
   _LOGGER.info("Starting py-grpc-promtheus hello word server")
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
-                       interceptors=(PromServerInterceptor(),))
+                       interceptors=(PromServerInterceptor(enable_handling_time_histogram=True),))
   hello_world_grpc.add_GreeterServicer_to_server(Greeter(), server)
   server.add_insecure_port("[::]:50051")
   server.start()

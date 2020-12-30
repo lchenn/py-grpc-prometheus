@@ -5,17 +5,13 @@ from timeit import default_timer
 import grpc
 
 import py_grpc_prometheus.grpc_utils as grpc_utils
-from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_COUNTER
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_HISTOGRAM
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_STARTED_COUNTER
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_RECEIVED
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_SENT
+import py_grpc_prometheus.server_metrics
 # Legacy metrics
 from py_grpc_prometheus.server_metrics import LEGACY_GRPC_SERVER_HANDLED_LATENCY_SECONDS
-from py_grpc_prometheus.server_metrics import LEGACY_GRPC_SERVER_HANDLED_TOTAL_COUNTER
-from py_grpc_prometheus.server_metrics import LEGACY_GRPC_SERVER_MSG_RECEIVED_TOTAL_COUNTER
-from py_grpc_prometheus.server_metrics import LEGACY_GRPC_SERVER_MSG_SENT_TOTAL_COUNTER
-from py_grpc_prometheus.server_metrics import LEGACY_GRPC_SERVER_STARTED_TOTAL_COUNTER
 
 
 class PromServerInterceptor(grpc.ServerInterceptor):
@@ -23,6 +19,8 @@ class PromServerInterceptor(grpc.ServerInterceptor):
   def __init__(self, enable_handling_time_histogram=False, legacy=False):
     self._enable_handling_time_histogram = enable_handling_time_histogram
     self._legacy = legacy
+    self._grpc_server_handled_total_counter = \
+      py_grpc_prometheus.server_metrics.get_grpc_server_handled_counter(self._legacy)
 
   def intercept_service(self, continuation, handler_call_details):
     """
@@ -39,42 +37,28 @@ class PromServerInterceptor(grpc.ServerInterceptor):
 
     def metrics_wrapper(behavior, request_streaming, response_streaming):
       def new_behavior(request_or_iterator, servicer_context):
-
         start = default_timer()
         grpc_type = grpc_utils.get_method_type(request_streaming, response_streaming)
         try:
-
-          received_metric = GRPC_SERVER_STREAM_MSG_RECEIVED
-          if self._legacy:
-            received_metric = LEGACY_GRPC_SERVER_MSG_RECEIVED_TOTAL_COUNTER
-
           if request_streaming:
             request_or_iterator = grpc_utils.wrap_iterator_inc_counter(
-              request_or_iterator,
-              GRPC_SERVER_STREAM_MSG_RECEIVED,
-              grpc_type,
-              grpc_service_name,
-              grpc_method_name)
-            if not self._legacy:
-              request_or_iterator = grpc_utils.wrap_iterator_inc_counter(
                 request_or_iterator,
-                GRPC_SERVER_STREAM_MSG_SENT,
+                GRPC_SERVER_STREAM_MSG_RECEIVED,
                 grpc_type,
                 grpc_service_name,
                 grpc_method_name)
+            if not self._legacy:
+              request_or_iterator = grpc_utils.wrap_iterator_inc_counter(
+                  request_or_iterator,
+                  GRPC_SERVER_STREAM_MSG_SENT,
+                  grpc_type,
+                  grpc_service_name,
+                  grpc_method_name)
           else:
-            if self._legacy:
-              LEGACY_GRPC_SERVER_STARTED_TOTAL_COUNTER.labels(
+            GRPC_SERVER_STARTED_COUNTER.labels(
                 grpc_type=grpc_type,
                 grpc_service=grpc_service_name,
-                grpc_method=grpc_method_name) \
-                .inc()
-            else:
-              GRPC_SERVER_STARTED_COUNTER.labels(
-                grpc_type=grpc_type,
-                grpc_service=grpc_service_name,
-                grpc_method=grpc_method_name) \
-                .inc()
+                grpc_method=grpc_method_name).inc()
 
           # Invoke the original rpc behavior.
           response_or_iterator = behavior(request_or_iterator, servicer_context)
@@ -82,55 +66,33 @@ class PromServerInterceptor(grpc.ServerInterceptor):
           if response_streaming:
 
             sent_metric = GRPC_SERVER_STREAM_MSG_SENT
-            if self._legacy:
-              sent_metric = LEGACY_GRPC_SERVER_MSG_SENT_TOTAL_COUNTER
-
             if not self._legacy:
               response_or_iterator = grpc_utils.wrap_iterator_inc_counter(
+                  response_or_iterator,
+                  GRPC_SERVER_STREAM_MSG_RECEIVED,
+                  grpc_type,
+                  grpc_service_name,
+                  grpc_method_name)
+
+            response_or_iterator = grpc_utils.wrap_iterator_inc_counter(
                 response_or_iterator,
-                GRPC_SERVER_STREAM_MSG_RECEIVED,
+                sent_metric,
                 grpc_type,
                 grpc_service_name,
                 grpc_method_name)
 
-            response_or_iterator = grpc_utils.wrap_iterator_inc_counter(
-              response_or_iterator,
-              sent_metric,
-              grpc_type,
-              grpc_service_name,
-              grpc_method_name)
-
           else:
-
-            if self._legacy:
-              LEGACY_GRPC_SERVER_HANDLED_TOTAL_COUNTER.labels(
-                grpc_type=grpc_type,
-                grpc_service=grpc_service_name,
-                grpc_method=grpc_method_name,
-                code=self._compute_status_code(servicer_context).name).inc()
-            else:
-              GRPC_SERVER_HANDLED_COUNTER.labels(
-                grpc_type=grpc_type,
-                grpc_service=grpc_service_name,
-                grpc_method=grpc_method_name,
-                code=self._compute_status_code(servicer_context).name).inc()
-
+            self.increase_grpc_server_handled_total_counter(grpc_type,
+                                                            grpc_service_name,
+                                                            grpc_method_name,
+                                                            self._compute_status_code(
+                                                                servicer_context).name)
           return response_or_iterator
         except grpc.RpcError as e:
-
-          if self._legacy:
-            LEGACY_GRPC_SERVER_HANDLED_TOTAL_COUNTER.labels(
-              grpc_type=grpc_type,
-              grpc_service=grpc_service_name,
-              grpc_method=grpc_method_name,
-              code=self._compute_error_code(e)).inc()
-          else:
-            GRPC_SERVER_HANDLED_COUNTER.labels(
-              grpc_type=grpc_type,
-              grpc_service=grpc_service_name,
-              grpc_method=grpc_method_name,
-              code=self._compute_error_code(e)).inc()
-
+          self.increase_grpc_server_handled_total_counter(grpc_type,
+                                                          grpc_service_name,
+                                                          grpc_method_name,
+                                                          self._compute_error_code(e).name)
           raise e
 
         finally:
@@ -138,16 +100,16 @@ class PromServerInterceptor(grpc.ServerInterceptor):
           if not response_streaming:
             if self._legacy:
               LEGACY_GRPC_SERVER_HANDLED_LATENCY_SECONDS.labels(
-                grpc_type=grpc_type,
-                grpc_service=grpc_service_name,
-                grpc_method=grpc_method_name) \
-                .observe(max(default_timer() - start, 0))
+                  grpc_type=grpc_type,
+                  grpc_service=grpc_service_name,
+                  grpc_method=grpc_method_name) \
+                  .observe(max(default_timer() - start, 0))
             elif self._enable_handling_time_histogram:
               GRPC_SERVER_HANDLED_HISTOGRAM.labels(
-                grpc_type=grpc_type,
-                grpc_service=grpc_service_name,
-                grpc_method=grpc_method_name) \
-                .observe(max(default_timer() - start, 0))
+                  grpc_type=grpc_type,
+                  grpc_service=grpc_service_name,
+                  grpc_method=grpc_method_name) \
+                  .observe(max(default_timer() - start, 0))
 
       return new_behavior
 
@@ -171,6 +133,21 @@ class PromServerInterceptor(grpc.ServerInterceptor):
 
     return grpc.StatusCode.UNKNOWN.name
 
+  def increase_grpc_server_handled_total_counter(
+      self, grpc_type, grpc_service_name, grpc_method_name, grpc_code):
+    if self._legacy:
+      self._grpc_server_handled_total_counter.labels(
+          grpc_type=grpc_type,
+          grpc_service=grpc_service_name,
+          grpc_method=grpc_method_name,
+          code=grpc_code).inc()
+    else:
+      self._grpc_server_handled_total_counter.labels(
+          grpc_type=grpc_type,
+          grpc_service=grpc_service_name,
+          grpc_method=grpc_method_name,
+          grpc_code=grpc_code).inc()
+
   def _wrap_rpc_behavior(self, handler, fn):
     """Returns a new rpc handler that wraps the given function"""
     if handler is None:
@@ -190,6 +167,6 @@ class PromServerInterceptor(grpc.ServerInterceptor):
       handler_factory = grpc.unary_unary_rpc_method_handler
 
     return handler_factory(
-      fn(behavior_fn, handler.request_streaming, handler.response_streaming),
-      request_deserializer=handler.request_deserializer,
-      response_serializer=handler.response_serializer)
+        fn(behavior_fn, handler.request_streaming, handler.response_streaming),
+        request_deserializer=handler.request_deserializer,
+        response_serializer=handler.response_serializer)
