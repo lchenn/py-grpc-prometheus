@@ -5,11 +5,11 @@ from timeit import default_timer
 import grpc
 
 import py_grpc_prometheus.grpc_utils as grpc_utils
+import py_grpc_prometheus.server_metrics
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_HANDLED_HISTOGRAM
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_STARTED_COUNTER
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_RECEIVED
 from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_SENT
-import py_grpc_prometheus.server_metrics
 # Legacy metrics
 from py_grpc_prometheus.server_metrics import LEGACY_GRPC_SERVER_HANDLED_LATENCY_SECONDS
 
