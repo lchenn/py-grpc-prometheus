@@ -129,9 +129,9 @@ class PromServerInterceptor(grpc.ServerInterceptor):
 
   def _compute_error_code(self, grpc_exception):
     if isinstance(grpc_exception, grpc.Call):
-      return grpc_exception.code().name
+      return grpc_exception.code()
 
-    return grpc.StatusCode.UNKNOWN.name
+    return grpc.StatusCode.UNKNOWN
 
   def increase_grpc_server_handled_total_counter(
       self, grpc_type, grpc_service_name, grpc_method_name, grpc_code):
