@@ -1,4 +1,5 @@
 import logging
+import sys
 import time
 
 import grpc
@@ -17,9 +18,13 @@ def call_server():
   stub = hello_world_grpc.GreeterStub(channel)
 
   # Call the unary-unary.
-  response = stub.SayHello(hello_world_pb2.HelloRequest(name="Unary"))
-  _LOGGER.info("Unary response: %s", response.message)
-  _LOGGER.info("")
+  for _ in range(5):
+    try:
+      response = stub.SayHello(hello_world_pb2.HelloRequest(name="Unary"))
+      _LOGGER.info("Unary response: %s", response.message)
+      _LOGGER.info("")
+    except grpc.RpcError:
+      _LOGGER.error("Got an exception from server")
 
   # Call the unary stream.
   _LOGGER.info("Running Unary Stream client")
@@ -30,10 +35,13 @@ def call_server():
   _LOGGER.info("")
 
   # Call the stream_unary.
-  _LOGGER.info("Running Stream Unary client")
-  response = stub.SayHelloStreamUnary(generate_requests("Stream Unary"))
-  _LOGGER.info("Stream Unary response: %s", response.message)
-  _LOGGER.info("")
+  try:
+    _LOGGER.info("Running Stream Unary client")
+    response = stub.SayHelloStreamUnary(generate_requests("Stream Unary"))
+    _LOGGER.info("Stream Unary response: %s", response.message)
+    _LOGGER.info("")
+  except grpc.RpcError:
+    _LOGGER.error("Got an exception from server")
 
   # Call stream & stream.
   _LOGGER.info("Running Bidi Stream client")
@@ -58,7 +66,7 @@ def run():
     while True:
       time.sleep(_ONE_DAY_IN_SECONDS)
   except KeyboardInterrupt:
-    quit(0)
+    sys.exit()
 
 
 if __name__ == "__main__":

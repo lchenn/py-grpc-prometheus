@@ -1,5 +1,6 @@
 import logging
 import time
+import random
 from concurrent import futures
 
 import grpc
@@ -15,9 +16,17 @@ _LOGGER = logging.getLogger(__name__)
 class Greeter(hello_world_grpc.GreeterServicer):
 
   def SayHello(self, request, context):
+    if random.randint(1, 5) == 1:
+      context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+      context.set_details('Consarnit!')
+      return None
     return hello_world_pb2.HelloReply(message="Hello, %s!" % request.name)
 
   def SayHelloUnaryStream(self, request, context):
+    if random.randint(1, 5) == 1:
+      context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+      context.set_details('Consarnit!')
+      return
     for i in range(10):
       yield hello_world_pb2.HelloReply(message="Hello, %s %s!" % (request.name, i))
 
