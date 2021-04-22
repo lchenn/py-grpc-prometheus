@@ -3,19 +3,10 @@
 from timeit import default_timer
 
 import grpc
+from prometheus_client.registry import REGISTRY
 
-import py_grpc_prometheus.grpc_utils as grpc_utils
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_HANDLED_COUNTER
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_HANDLED_HISTOGRAM
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_STARTED_COUNTER
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_STREAM_MSG_RECEIVED
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_STREAM_MSG_SENT
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_STREAM_RECV_HISTOGRAM
-from py_grpc_prometheus.client_metrics import GRPC_CLIENT_STREAM_SEND_HISTOGRAM
-# Legacy metrics
-from py_grpc_prometheus.client_metrics import LEGACY_GRPC_CLIENT_COMPLETED_COUNTER
-from py_grpc_prometheus.client_metrics import LEGACY_GRPC_CLIENT_COMPLETED_LATENCY_SECONDS_HISTOGRAM
-
+from py_grpc_prometheus import grpc_utils
+from py_grpc_prometheus.client_metrics import init_metrics
 
 class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
                             grpc.UnaryStreamClientInterceptor,
@@ -30,19 +21,21 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
             enable_client_handling_time_histogram=False,
             enable_client_stream_receive_time_histogram=False,
             enable_client_stream_send_time_histogram=False,
-            legacy=False
+            legacy=False,
+            registry=REGISTRY
   ):
     self._enable_client_handling_time_histogram = enable_client_handling_time_histogram
     self._enable_client_stream_receive_time_histogram = enable_client_stream_receive_time_histogram
     self._enable_client_stream_send_time_histogram = enable_client_stream_send_time_histogram
     self._legacy = legacy
+    self._metrics = init_metrics(registry)
 
   def intercept_unary_unary(self, continuation, client_call_details, request):
     grpc_service_name, grpc_method_name, _ = grpc_utils.split_method_call(client_call_details)
     grpc_type = grpc_utils.UNARY
 
 
-    GRPC_CLIENT_STARTED_COUNTER.labels(
+    self._metrics["grpc_client_started_counter"].labels(
         grpc_type=grpc_type,
         grpc_service=grpc_service_name,
         grpc_method=grpc_method_name).inc()
@@ -50,24 +43,24 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
     start = default_timer()
     handler = continuation(client_call_details, request)
     if self._legacy:
-      LEGACY_GRPC_CLIENT_COMPLETED_LATENCY_SECONDS_HISTOGRAM.labels(
+      self._metrics["legacy_grpc_client_completed_latency_seconds_histogram"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
     elif self._enable_client_handling_time_histogram:
-      GRPC_CLIENT_HANDLED_HISTOGRAM.labels(
+      self._metrics["grpc_client_handled_histogram"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
 
     if self._legacy:
-      LEGACY_GRPC_CLIENT_COMPLETED_COUNTER.labels(
+      self._metrics["legacy_grpc_client_completed_counter"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name,
           code=handler.code().name).inc()
     else:
-      GRPC_CLIENT_HANDLED_COUNTER.labels(
+      self._metrics["grpc_client_handled_counter"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name,
@@ -79,7 +72,7 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
     grpc_service_name, grpc_method_name, _ = grpc_utils.split_method_call(client_call_details)
     grpc_type = grpc_utils.SERVER_STREAMING
 
-    GRPC_CLIENT_STARTED_COUNTER.labels(
+    self._metrics["grpc_client_started_counter"].labels(
         grpc_type=grpc_type,
         grpc_service=grpc_service_name,
         grpc_method=grpc_method_name).inc()
@@ -87,26 +80,26 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
     start = default_timer()
     handler = continuation(client_call_details, request)
     if self._legacy:
-      LEGACY_GRPC_CLIENT_COMPLETED_LATENCY_SECONDS_HISTOGRAM.labels(
+      self._metrics["legacy_grpc_client_completed_latency_seconds_histogram"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
 
     elif self._enable_client_handling_time_histogram:
-      GRPC_CLIENT_HANDLED_HISTOGRAM.labels(
+      self._metrics["grpc_client_handled_histogram"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
 
     handler = grpc_utils.wrap_iterator_inc_counter(
         handler,
-        GRPC_CLIENT_STREAM_MSG_RECEIVED,
+        self._metrics["grpc_client_stream_msg_received"],
         grpc_type,
         grpc_service_name,
         grpc_method_name)
 
     if self._enable_client_stream_receive_time_histogram and not self._legacy:
-      GRPC_CLIENT_STREAM_RECV_HISTOGRAM.labels(
+      self._metrics["grpc_client_stream_recv_histogram"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
@@ -117,7 +110,7 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
     grpc_service_name, grpc_method_name, _ = grpc_utils.split_method_call(client_call_details)
     grpc_type = grpc_utils.CLIENT_STREAMING
 
-    iterator_metric = GRPC_CLIENT_STREAM_MSG_SENT
+    iterator_metric = self._metrics["grpc_client_stream_msg_sent"]
 
     request_iterator = grpc_utils.wrap_iterator_inc_counter(
         request_iterator,
@@ -130,27 +123,27 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
     handler = continuation(client_call_details, request_iterator)
 
     if self._legacy:
-      GRPC_CLIENT_STARTED_COUNTER.labels(
+      self._metrics["grpc_client_started_counter"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).inc()
-      LEGACY_GRPC_CLIENT_COMPLETED_LATENCY_SECONDS_HISTOGRAM.labels(
+      self._metrics["legacy_grpc_client_completed_latency_seconds_histogram"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
     else:
-      GRPC_CLIENT_STARTED_COUNTER.labels(
+      self._metrics["grpc_client_started_counter"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).inc()
       if self._enable_client_handling_time_histogram:
-        GRPC_CLIENT_HANDLED_HISTOGRAM.labels(
+        self._metrics["grpc_client_handled_histogram"].labels(
             grpc_type=grpc_type,
             grpc_service=grpc_service_name,
             grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
 
     if self._enable_client_stream_send_time_histogram and not self._legacy:
-      GRPC_CLIENT_STREAM_SEND_HISTOGRAM.labels(
+      self._metrics["grpc_client_stream_send_histogram"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
@@ -163,7 +156,7 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
     grpc_type = grpc_utils.BIDI_STREAMING
     start = default_timer()
 
-    iterator_sent_metric = GRPC_CLIENT_STREAM_MSG_SENT
+    iterator_sent_metric = self._metrics["grpc_client_stream_msg_sent"]
 
     response_iterator = continuation(
         client_call_details,
@@ -175,12 +168,12 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
             grpc_method_name))
 
     if self._enable_client_stream_send_time_histogram and not self._legacy:
-      GRPC_CLIENT_STREAM_SEND_HISTOGRAM.labels(
+      self._metrics["grpc_client_stream_send_histogram"].labels(
           grpc_type=grpc_type,
           grpc_Service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
 
-    iterator_received_metric = GRPC_CLIENT_STREAM_MSG_RECEIVED
+    iterator_received_metric = self._metrics["grpc_client_stream_msg_received"]
 
     response_iterator = grpc_utils.wrap_iterator_inc_counter(
         response_iterator,
@@ -190,7 +183,7 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
         grpc_method_name)
 
     if self._enable_client_stream_receive_time_histogram and not self._legacy:
-      GRPC_CLIENT_STREAM_RECV_HISTOGRAM.labels(
+      self._metrics["grpc_client_stream_recv_histogram"].labels(
           grpc_type=grpc_type,
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
