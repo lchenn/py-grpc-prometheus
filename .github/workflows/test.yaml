@@ -9,7 +9,7 @@ jobs:
           - '3.6'
           - '3.7'
           - '3.8'
-    name: Python ${{ matrix.python-version }} sample
+    name: Test in python ${{ matrix.python-version }} 
     steps:
       - uses: actions/checkout@v2
       - name: Setup python
@@ -20,4 +20,6 @@ jobs:
       - run: |-
           pip install -r requirements.txt
           pip install -r test_requirements.txt
-      - run: pytest
+      - run: |-
+          coverage run --source=py_grpc_prometheus -m pytest 
+          coverage report -m
