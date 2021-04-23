@@ -15,7 +15,7 @@ from py_grpc_prometheus.server_metrics import GRPC_SERVER_STREAM_MSG_SENT
 from py_grpc_prometheus.server_metrics import LEGACY_GRPC_SERVER_HANDLED_LATENCY_SECONDS
 
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 class PromServerInterceptor(grpc.ServerInterceptor):
 
@@ -127,7 +127,7 @@ class PromServerInterceptor(grpc.ServerInterceptor):
           # in order to suppress the noise in logging
           if self._skip_exceptions:
             if self._log_exceptions:
-              LOGGER.error(e)
+              _LOGGER.error(e)
           else:
             raise e
 
