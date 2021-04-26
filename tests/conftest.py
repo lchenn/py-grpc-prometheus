@@ -25,6 +25,48 @@ def start_prometheus_server(port, prom_registry=registry.REGISTRY):
   return httpd
 
 @pytest.fixture(scope='function')
+def grpc_legacy_server():
+  prom_registry = registry.CollectorRegistry(auto_describe=True)
+  server = grpc.server(futures.ThreadPoolExecutor(max_workers=2),
+                       interceptors=(
+                           PromServerInterceptor(
+                               legacy=True,
+                               enable_handling_time_histogram=True,
+                               registry=prom_registry
+                           ),
+                       ))
+  hello_world_grpc.add_GreeterServicer_to_server(Greeter(), server)
+  server.add_insecure_port("[::]:50051")
+  server.start()
+  prom_server = start_prometheus_server(50052, prom_registry)
+
+  yield server
+  server.stop(0)
+  prom_server.shutdown()
+  prom_server.server_close()
+
+@pytest.fixture(scope='function')
+def grpc_server_with_exception_handling():
+  prom_registry = registry.CollectorRegistry(auto_describe=True)
+  server = grpc.server(futures.ThreadPoolExecutor(max_workers=2),
+                       interceptors=(
+                           PromServerInterceptor(
+                               skip_exceptions=True,
+                               enable_handling_time_histogram=True,
+                               registry=prom_registry
+                           ),
+                       ))
+  hello_world_grpc.add_GreeterServicer_to_server(Greeter(), server)
+  server.add_insecure_port("[::]:50051")
+  server.start()
+  prom_server = start_prometheus_server(50052, prom_registry)
+
+  yield server
+  server.stop(0)
+  prom_server.shutdown()
+  prom_server.server_close()
+
+@pytest.fixture(scope='function')
 def grpc_server():
   prom_registry = registry.CollectorRegistry(auto_describe=True)
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=2),

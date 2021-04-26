@@ -126,8 +126,8 @@ class PromServerInterceptor(grpc.ServerInterceptor):
           if self._skip_exceptions:
             if self._log_exceptions:
               _LOGGER.error(e)
-          else:
-            raise e
+            return response_or_iterator
+          raise e
 
       return new_behavior
 

@@ -19,6 +19,10 @@ class Greeter(hello_world_grpc.GreeterServicer):
       context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
       context.set_details('Consarnit!')
       return None
+    if request.name == "rpcError":
+      raise grpc.RpcError()
+    if request.name == "unknownError":
+      raise Exception(request.name)
     return hello_world_pb2.HelloReply(message="Hello, %s!" % request.name)
 
   def SayHelloUnaryStream(self, request, context):
