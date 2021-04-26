@@ -118,11 +118,6 @@ class PromServerInterceptor(grpc.ServerInterceptor):
                     grpc_service=grpc_service_name,
                     grpc_method=grpc_method_name) \
                     .observe(max(default_timer() - start, 0))
-                self._metrics["grpc_server_handled_histogram"].labels(
-                    grpc_type=grpc_type,
-                    grpc_service=grpc_service_name,
-                    grpc_method=grpc_method_name) \
-                    .observe(max(default_timer() - start, 0))
         except Exception as e: # pylint: disable=broad-except
           # Allow user to skip the exceptions in order to maintain
           # the basic functionality in the server
