@@ -1,4 +1,3 @@
-import logging
 from concurrent import futures
 import threading
 
@@ -8,10 +7,9 @@ from prometheus_client import exposition, registry
 
 from py_grpc_prometheus.prometheus_client_interceptor import PromClientInterceptor
 from py_grpc_prometheus.prometheus_server_interceptor import PromServerInterceptor
-import tests.integration.hello_world.hello_world_pb2_grpc as hello_world_grpc
+from tests.integration.hello_world import hello_world_pb2_grpc as hello_world_grpc
 from tests.integration.hello_world.hello_world_server import Greeter
-
-LOGGER = logging.getLogger(__name__)
+from tests.integration.hello_world import hello_world_pb2
 
 def start_prometheus_server(port, prom_registry=registry.REGISTRY):
   app = exposition.make_wsgi_app(prom_registry)
@@ -58,3 +56,17 @@ def grpc_stub():
 
   channel.close()
   prom_server.shutdown()
+
+@pytest.fixture(scope="module")
+def stream_request_generator():
+  def _generate_requests(number_of_names):
+    for i in range(number_of_names):
+      yield hello_world_pb2.HelloRequest(name="{}".format(i))
+  return _generate_requests
+
+@pytest.fixture(scope="module")
+def bidi_request_generator():
+  def _generate_bidi_requests(number_of_names, number_of_res):
+    for i in range(number_of_names):
+      yield hello_world_pb2.MultipleHelloResRequest(name="{}".format(i), res=number_of_res)
+  return _generate_bidi_requests

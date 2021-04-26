@@ -22,7 +22,7 @@ class GreeterStub(object):
         )
     self.SayHelloUnaryStream = channel.unary_stream(
         '/Greeter/SayHelloUnaryStream',
-        request_serializer=hello__world__pb2.HelloRequest.SerializeToString,
+        request_serializer=hello__world__pb2.MultipleHelloResRequest.SerializeToString,
         response_deserializer=hello__world__pb2.HelloReply.FromString,
         )
     self.SayHelloStreamUnary = channel.stream_unary(
@@ -32,7 +32,7 @@ class GreeterStub(object):
         )
     self.SayHelloBidiStream = channel.stream_stream(
         '/Greeter/SayHelloBidiStream',
-        request_serializer=hello__world__pb2.HelloRequest.SerializeToString,
+        request_serializer=hello__world__pb2.MultipleHelloResRequest.SerializeToString,
         response_deserializer=hello__world__pb2.HelloReply.FromString,
         )
 
@@ -79,7 +79,7 @@ def add_GreeterServicer_to_server(servicer, server):
       ),
       'SayHelloUnaryStream': grpc.unary_stream_rpc_method_handler(
           servicer.SayHelloUnaryStream,
-          request_deserializer=hello__world__pb2.HelloRequest.FromString,
+          request_deserializer=hello__world__pb2.MultipleHelloResRequest.FromString,
           response_serializer=hello__world__pb2.HelloReply.SerializeToString,
       ),
       'SayHelloStreamUnary': grpc.stream_unary_rpc_method_handler(
@@ -89,7 +89,7 @@ def add_GreeterServicer_to_server(servicer, server):
       ),
       'SayHelloBidiStream': grpc.stream_stream_rpc_method_handler(
           servicer.SayHelloBidiStream,
-          request_deserializer=hello__world__pb2.HelloRequest.FromString,
+          request_deserializer=hello__world__pb2.MultipleHelloResRequest.FromString,
           response_serializer=hello__world__pb2.HelloReply.SerializeToString,
       ),
   }

@@ -6,18 +6,23 @@ service Greeter {
   rpc SayHello (HelloRequest) returns (HelloReply) {}
 
   // Sends one greeting, get multiple response.
-  rpc SayHelloUnaryStream (HelloRequest) returns (stream HelloReply) {}
+  rpc SayHelloUnaryStream (MultipleHelloResRequest) returns (stream HelloReply) {}
 
   // Send multiple greetings, get one response.
   rpc SayHelloStreamUnary (stream HelloRequest) returns (HelloReply) {}
 
   // Send multiple greetings, get multiple response.
-  rpc SayHelloBidiStream(stream HelloRequest) returns (stream HelloReply) {}
+  rpc SayHelloBidiStream(stream MultipleHelloResRequest) returns (stream HelloReply) {}
 }
 
 // The request message containing the user's name.
 message HelloRequest {
   string name = 1;
+}
+
+message MultipleHelloResRequest {
+  string name = 1;
+  int32 res = 2;
 }
 
 // The response message containing the greetings
