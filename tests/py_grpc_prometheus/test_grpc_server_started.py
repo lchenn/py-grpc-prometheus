@@ -19,7 +19,7 @@ def test_grpc_server_started_with_unary_stream(
     number_of_res, grpc_server, grpc_stub
 ):  # pylint: disable=unused-argument
   list(
-      grpc_htub.SayHelloUnaryStream(
+      grpc_stub.SayHelloUnaryStream(
           hello_world_pb2.MultipleHelloResRequest(
               name="unary stream", res=number_of_res
           )
