@@ -56,13 +56,6 @@ class PromServerInterceptor(grpc.ServerInterceptor):
                   grpc_type,
                   grpc_service_name,
                   grpc_method_name)
-              if not self._legacy:
-                request_or_iterator = grpc_utils.wrap_iterator_inc_counter(
-                    request_or_iterator,
-                    self._metrics["grpc_server_stream_msg_sent"],
-                    grpc_type,
-                    grpc_service_name,
-                    grpc_method_name)
             else:
               self._metrics["grpc_server_started_counter"].labels(
                   grpc_type=grpc_type,
@@ -74,14 +67,6 @@ class PromServerInterceptor(grpc.ServerInterceptor):
 
             if response_streaming:
               sent_metric = self._metrics["grpc_server_stream_msg_sent"]
-              if not self._legacy:
-                response_or_iterator = grpc_utils.wrap_iterator_inc_counter(
-                    response_or_iterator,
-                    self._metrics["grpc_server_stream_msg_received"],
-                    grpc_type,
-                    grpc_service_name,
-                    grpc_method_name)
-
               response_or_iterator = grpc_utils.wrap_iterator_inc_counter(
                   response_or_iterator,
                   sent_metric,

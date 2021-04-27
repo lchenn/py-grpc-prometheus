@@ -36,7 +36,7 @@ def test_grpc_server_msg_sent_with_stream_unary(
 ):  # pylint: disable=unused-argument
   grpc_stub.SayHelloStreamUnary(stream_request_generator(number_of_names))
   target_metric = get_server_metric("grpc_server_msg_sent")
-  assert target_metric.samples[0].value == number_of_names
+  assert target_metric.samples == []
 
 
 @pytest.mark.parametrize(
@@ -51,4 +51,4 @@ def test_grpc_server_msg_sent_with_bidi_stream(
       )
   )
   target_metric = get_server_metric("grpc_server_msg_sent")
-  assert target_metric.samples[0].value == number_of_names * 2
+  assert target_metric.samples[0].value == number_of_names

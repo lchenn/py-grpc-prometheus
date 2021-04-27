@@ -27,7 +27,7 @@ def test_grpc_server_msg_received_with_unary_stream(
       )
   )
   target_metric = get_server_metric("grpc_server_msg_received")
-  assert target_metric.samples[0].value == number_of_res
+  assert target_metric.samples == []
 
 
 @pytest.mark.parametrize("number_of_names", [1, 10, 100])
@@ -51,4 +51,4 @@ def test_grpc_server_msg_received_with_bidi_stream(
       )
   )
   target_metric = get_server_metric("grpc_server_msg_received")
-  assert target_metric.samples[0].value == number_of_names * 2
+  assert target_metric.samples[0].value == number_of_names
