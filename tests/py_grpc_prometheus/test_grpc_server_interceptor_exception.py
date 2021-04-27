@@ -68,3 +68,16 @@ def test_grpc_server_handled_with_interceptor_error_and_skip_exceptions(
 
   target_metric = get_server_metric("grpc_server_handled")
   assert target_metric.samples == []
+
+@pytest.mark.parametrize("target_count", [1, 10, 100])
+def test_grpc_server_handled_before_request_error(
+    target_count, grpc_server, grpc_stub
+):  # pylint: disable=unused-argument
+  for _ in range(target_count):
+    with patch(
+        'py_grpc_prometheus.grpc_utils.wrap_iterator_inc_counter',
+        side_effect=Exception('mocked error')
+    ):
+      assert grpc_stub.SayHello(
+          hello_world_pb2.HelloRequest(name="unary")
+      ).message == "Hello, unary!"
