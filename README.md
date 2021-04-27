@@ -125,7 +125,7 @@ server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
 
 ## How to run and test
 ```sh
-make setup
+make initialize-development
 make test
 ```
 
