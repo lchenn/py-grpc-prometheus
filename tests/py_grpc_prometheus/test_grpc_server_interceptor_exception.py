@@ -34,8 +34,8 @@ def test_grpc_server_handled_with_interceptor_error(
 ):  # pylint: disable=unused-argument
   for _ in range(target_count):
     with patch(
-        'py_grpc_prometheus.prometheus_server_interceptor."\
-        "PromServerInterceptor._compute_status_code',
+        'py_grpc_prometheus.prometheus_server_interceptor.'\
+        'PromServerInterceptor._compute_status_code',
         side_effect=Exception('mocked error')
     ):
       with pytest.raises(grpc.RpcError):
@@ -58,8 +58,8 @@ def test_grpc_server_handled_with_interceptor_error_and_skip_exceptions(
 ):  # pylint: disable=unused-argument
   for _ in range(target_count):
     with patch(
-        'py_grpc_prometheus.prometheus_server_interceptor."\
-        "PromServerInterceptor._compute_status_code',
+        'py_grpc_prometheus.prometheus_server_interceptor.'\
+        'PromServerInterceptor._compute_status_code',
         side_effect=Exception('mocked error')
     ):
       assert grpc_stub.SayHello(
