@@ -1,6 +1,5 @@
 import logging
 import time
-import random
 from concurrent import futures
 
 import grpc
@@ -16,19 +15,26 @@ _LOGGER = logging.getLogger(__name__)
 class Greeter(hello_world_grpc.GreeterServicer):
 
   def SayHello(self, request, context):
-    if random.randint(1, 5) == 1:
+    if request.name == "invalid":
       context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
       context.set_details('Consarnit!')
       return None
+    if request.name == "rpcError":
+      raise grpc.RpcError()
+    if request.name == "unknownError":
+      raise Exception(request.name)
     return hello_world_pb2.HelloReply(message="Hello, %s!" % request.name)
 
   def SayHelloUnaryStream(self, request, context):
-    if random.randint(1, 5) == 1:
+    if request.name == "invalid":
       context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
       context.set_details('Consarnit!')
       return
-    for i in range(10):
-      yield hello_world_pb2.HelloReply(message="Hello, %s %s!" % (request.name, i))
+    for i in range(request.res):
+      yield hello_world_pb2.HelloReply(
+          message="Hello, %s %s!" % (request.name, i)
+      )
+    return
 
   def SayHelloStreamUnary(self, request_iterator, context):
     names = ""
@@ -45,11 +51,17 @@ def serve():
   logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
   _LOGGER.info("Starting py-grpc-promtheus hello word server")
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
-                       interceptors=(PromServerInterceptor(enable_handling_time_histogram=True),))
+                       interceptors=(
+                           PromServerInterceptor(
+                               enable_handling_time_histogram=True,
+                               skip_exceptions=True
+                           ),
+                       ))
   hello_world_grpc.add_GreeterServicer_to_server(Greeter(), server)
   server.add_insecure_port("[::]:50051")
   server.start()
   start_http_server(50052)
+
   _LOGGER.info("Started py-grpc-promtheus hello word server, grpc at localhost:50051, "
                "metrics at http://localhost:50052")
   try:

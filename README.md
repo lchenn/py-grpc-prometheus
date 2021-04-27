@@ -39,7 +39,7 @@ import grpc
 from py_grpc_prometheus.prometheus_client_interceptor import PromClientInterceptor
 
 channel = grpc.intercept_channel(grpc.insecure_channel('server:6565'),
-                                         PromClientInterceptor())  
+                                         PromClientInterceptor())
 # Start an end point to expose metrics.
 start_http_server(metrics_port)
 ```
@@ -81,8 +81,8 @@ server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
 After the call completes, its handling time will be recorded in a [Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram)
 variable `grpc_server_handling_seconds`. The histogram variable contains three sub-metrics:
 
- * `grpc_server_handling_seconds_count` - the count of all completed RPCs by status and method 
- * `grpc_server_handling_seconds_sum` - cumulative time of RPCs by status and method, useful for 
+ * `grpc_server_handling_seconds_count` - the count of all completed RPCs by status and method
+ * `grpc_server_handling_seconds_sum` - cumulative time of RPCs by status and method, useful for
    calculating average handling times
  * `grpc_server_handling_seconds_bucket` - contains the counts of RPCs by status and method in respective
    handling-time buckets. These buckets can be used by Prometheus to estimate SLAs (see [here](https://prometheus.io/docs/practices/histograms/))
@@ -124,19 +124,10 @@ server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
 ```
 
 ## How to run and test
-1. Run the testing server
-
-```bash
-python -m tests.integration.hello_world.hello_world_sever
+```sh
+make setup
+make test
 ```
-
-2. Run the testing client
-```bash
-python -m tests.integration.hello_world.hello_world_client
-```
-
-3. Open http://localhost:50052 for the server side metrics
-4. Open http://localhost:50053 for the client side metrics
 
 ## TODO:
 - Unit test with https://github.com/census-instrumentation/opencensus-python/blob/master/tests/unit/trace/ext/grpc/test_server_interceptor.py

@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='hello_world.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x11hello_world.proto\"\x1c\n\x0cHelloRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x1d\n\nHelloReply\x12\x0f\n\x07message\x18\x01 \x01(\t2\xd9\x01\n\x07Greeter\x12(\n\x08SayHello\x12\r.HelloRequest\x1a\x0b.HelloReply\"\x00\x12\x35\n\x13SayHelloUnaryStream\x12\r.HelloRequest\x1a\x0b.HelloReply\"\x00\x30\x01\x12\x35\n\x13SayHelloStreamUnary\x12\r.HelloRequest\x1a\x0b.HelloReply\"\x00(\x01\x12\x36\n\x12SayHelloBidiStream\x12\r.HelloRequest\x1a\x0b.HelloReply\"\x00(\x01\x30\x01\x62\x06proto3')
+  serialized_pb=_b('\n\x11hello_world.proto\"\x1c\n\x0cHelloRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"4\n\x17MultipleHelloResRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03res\x18\x02 \x01(\x05\"\x1d\n\nHelloReply\x12\x0f\n\x07message\x18\x01 \x01(\t2\xef\x01\n\x07Greeter\x12(\n\x08SayHello\x12\r.HelloRequest\x1a\x0b.HelloReply\"\x00\x12@\n\x13SayHelloUnaryStream\x12\x18.MultipleHelloResRequest\x1a\x0b.HelloReply\"\x00\x30\x01\x12\x35\n\x13SayHelloStreamUnary\x12\r.HelloRequest\x1a\x0b.HelloReply\"\x00(\x01\x12\x41\n\x12SayHelloBidiStream\x12\x18.MultipleHelloResRequest\x1a\x0b.HelloReply\"\x00(\x01\x30\x01\x62\x06proto3')
 )
 
 
@@ -57,6 +57,44 @@ _HELLOREQUEST = _descriptor.Descriptor(
 )
 
 
+_MULTIPLEHELLORESREQUEST = _descriptor.Descriptor(
+  name='MultipleHelloResRequest',
+  full_name='MultipleHelloResRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='MultipleHelloResRequest.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='res', full_name='MultipleHelloResRequest.res', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=51,
+  serialized_end=103,
+)
+
+
 _HELLOREPLY = _descriptor.Descriptor(
   name='HelloReply',
   full_name='HelloReply',
@@ -83,11 +121,12 @@ _HELLOREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=51,
-  serialized_end=80,
+  serialized_start=105,
+  serialized_end=134,
 )
 
 DESCRIPTOR.message_types_by_name['HelloRequest'] = _HELLOREQUEST
+DESCRIPTOR.message_types_by_name['MultipleHelloResRequest'] = _MULTIPLEHELLORESREQUEST
 DESCRIPTOR.message_types_by_name['HelloReply'] = _HELLOREPLY
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -97,6 +136,13 @@ HelloRequest = _reflection.GeneratedProtocolMessageType('HelloRequest', (_messag
   # @@protoc_insertion_point(class_scope:HelloRequest)
   ))
 _sym_db.RegisterMessage(HelloRequest)
+
+MultipleHelloResRequest = _reflection.GeneratedProtocolMessageType('MultipleHelloResRequest', (_message.Message,), dict(
+  DESCRIPTOR = _MULTIPLEHELLORESREQUEST,
+  __module__ = 'hello_world_pb2'
+  # @@protoc_insertion_point(class_scope:MultipleHelloResRequest)
+  ))
+_sym_db.RegisterMessage(MultipleHelloResRequest)
 
 HelloReply = _reflection.GeneratedProtocolMessageType('HelloReply', (_message.Message,), dict(
   DESCRIPTOR = _HELLOREPLY,
@@ -113,8 +159,8 @@ _GREETER = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=83,
-  serialized_end=300,
+  serialized_start=137,
+  serialized_end=376,
   methods=[
   _descriptor.MethodDescriptor(
     name='SayHello',
@@ -130,7 +176,7 @@ _GREETER = _descriptor.ServiceDescriptor(
     full_name='Greeter.SayHelloUnaryStream',
     index=1,
     containing_service=None,
-    input_type=_HELLOREQUEST,
+    input_type=_MULTIPLEHELLORESREQUEST,
     output_type=_HELLOREPLY,
     options=None,
   ),
@@ -148,7 +194,7 @@ _GREETER = _descriptor.ServiceDescriptor(
     full_name='Greeter.SayHelloBidiStream',
     index=3,
     containing_service=None,
-    input_type=_HELLOREQUEST,
+    input_type=_MULTIPLEHELLORESREQUEST,
     output_type=_HELLOREPLY,
     options=None,
   ),
@@ -184,7 +230,7 @@ try:
           )
       self.SayHelloUnaryStream = channel.unary_stream(
           '/Greeter/SayHelloUnaryStream',
-          request_serializer=HelloRequest.SerializeToString,
+          request_serializer=MultipleHelloResRequest.SerializeToString,
           response_deserializer=HelloReply.FromString,
           )
       self.SayHelloStreamUnary = channel.stream_unary(
@@ -194,7 +240,7 @@ try:
           )
       self.SayHelloBidiStream = channel.stream_stream(
           '/Greeter/SayHelloBidiStream',
-          request_serializer=HelloRequest.SerializeToString,
+          request_serializer=MultipleHelloResRequest.SerializeToString,
           response_deserializer=HelloReply.FromString,
           )
 
@@ -241,7 +287,7 @@ try:
         ),
         'SayHelloUnaryStream': grpc.unary_stream_rpc_method_handler(
             servicer.SayHelloUnaryStream,
-            request_deserializer=HelloRequest.FromString,
+            request_deserializer=MultipleHelloResRequest.FromString,
             response_serializer=HelloReply.SerializeToString,
         ),
         'SayHelloStreamUnary': grpc.stream_unary_rpc_method_handler(
@@ -251,7 +297,7 @@ try:
         ),
         'SayHelloBidiStream': grpc.stream_stream_rpc_method_handler(
             servicer.SayHelloBidiStream,
-            request_deserializer=HelloRequest.FromString,
+            request_deserializer=MultipleHelloResRequest.FromString,
             response_serializer=HelloReply.SerializeToString,
         ),
     }
@@ -322,9 +368,9 @@ try:
     generated only to ease transition from grpcio<0.15.0 to grpcio>=0.15.0"""
     request_deserializers = {
       ('Greeter', 'SayHello'): HelloRequest.FromString,
-      ('Greeter', 'SayHelloBidiStream'): HelloRequest.FromString,
+      ('Greeter', 'SayHelloBidiStream'): MultipleHelloResRequest.FromString,
       ('Greeter', 'SayHelloStreamUnary'): HelloRequest.FromString,
-      ('Greeter', 'SayHelloUnaryStream'): HelloRequest.FromString,
+      ('Greeter', 'SayHelloUnaryStream'): MultipleHelloResRequest.FromString,
     }
     response_serializers = {
       ('Greeter', 'SayHello'): HelloReply.SerializeToString,
@@ -350,9 +396,9 @@ try:
     generated only to ease transition from grpcio<0.15.0 to grpcio>=0.15.0"""
     request_serializers = {
       ('Greeter', 'SayHello'): HelloRequest.SerializeToString,
-      ('Greeter', 'SayHelloBidiStream'): HelloRequest.SerializeToString,
+      ('Greeter', 'SayHelloBidiStream'): MultipleHelloResRequest.SerializeToString,
       ('Greeter', 'SayHelloStreamUnary'): HelloRequest.SerializeToString,
-      ('Greeter', 'SayHelloUnaryStream'): HelloRequest.SerializeToString,
+      ('Greeter', 'SayHelloUnaryStream'): MultipleHelloResRequest.SerializeToString,
     }
     response_deserializers = {
       ('Greeter', 'SayHello'): HelloReply.FromString,
