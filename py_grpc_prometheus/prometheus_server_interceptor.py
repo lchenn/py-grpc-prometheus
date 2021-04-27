@@ -45,6 +45,7 @@ class PromServerInterceptor(grpc.ServerInterceptor):
 
     def metrics_wrapper(behavior, request_streaming, response_streaming):
       def new_behavior(request_or_iterator, servicer_context):
+        response_or_iterator = None
         try:
           start = default_timer()
           grpc_type = grpc_utils.get_method_type(request_streaming, response_streaming)
@@ -111,7 +112,9 @@ class PromServerInterceptor(grpc.ServerInterceptor):
           if self._skip_exceptions:
             if self._log_exceptions:
               _LOGGER.error(e)
-            return response_or_iterator
+            if response_or_iterator is None:
+              return response_or_iterator
+            return behavior(request_or_iterator, servicer_context)
           raise e
 
       return new_behavior
