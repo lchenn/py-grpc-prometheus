@@ -170,7 +170,7 @@ class PromClientInterceptor(grpc.UnaryUnaryClientInterceptor,
     if self._enable_client_stream_send_time_histogram and not self._legacy:
       self._metrics["grpc_client_stream_send_histogram"].labels(
           grpc_type=grpc_type,
-          grpc_Service=grpc_service_name,
+          grpc_service=grpc_service_name,
           grpc_method=grpc_method_name).observe(max(default_timer() - start, 0))
 
     iterator_received_metric = self._metrics["grpc_client_stream_msg_received"]
