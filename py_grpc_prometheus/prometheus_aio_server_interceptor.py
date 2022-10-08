@@ -5,7 +5,6 @@ from grpc.aio import ServerInterceptor
 from prometheus_client.registry import REGISTRY
 from py_grpc_prometheus import grpc_utils
 from py_grpc_prometheus import server_metrics
-from py_grpc_prometheus.grpc_utils import wrap_rpc_behavior, compute_error_code
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +81,7 @@ class PromAioServerInterceptor(ServerInterceptor):
             self.increase_grpc_server_handled_total_counter(grpc_type,
                                                             grpc_service_name,
                                                             grpc_method_name,
-                                                            compute_error_code(e).name)
+                                                            grpc_utils.compute_error_code(e).name)
             raise e
 
           finally:
@@ -115,7 +114,7 @@ class PromAioServerInterceptor(ServerInterceptor):
 
       return new_behavior
     response = await continuation(handler_call_details)
-    optional_any = wrap_rpc_behavior(response, metrics_wrapper)
+    optional_any = grpc_utils.wrap_rpc_behavior(response, metrics_wrapper)
 
     return optional_any
 
