@@ -110,7 +110,7 @@ class PromAioServerInterceptor(ServerInterceptor):
               _LOGGER.error(e)
             if response_or_iterator is None:
               return response_or_iterator
-            return behavior(request_or_iterator, servicer_context)
+            return await behavior(request_or_iterator, servicer_context)
           raise e
 
       return new_behavior
