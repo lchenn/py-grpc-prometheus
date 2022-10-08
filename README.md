@@ -65,6 +65,19 @@ server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
 start_http_server(metrics_port)
 ```
 
+## Aio grpc server
+```python
+import grpc
+from py_grpc_prometheus.prometheus_aio_server_interceptor import PromAioServerInterceptor
+from prometheus_client import start_http_server
+```
+
+```python
+server = grpc.aio.server(interceptors=(PromAioServerInterceptor(),))
+# Start an end point to expose metrics.
+start_http_server(metrics_port)
+```
+
 ## Histograms
 
 [Prometheus histograms](https://prometheus.io/docs/concepts/metric_types/#histogram) are a great way
