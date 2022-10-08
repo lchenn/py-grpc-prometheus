@@ -1,3 +1,6 @@
+import grpc
+
+
 UNARY = "UNARY"
 SERVER_STREAMING = "SERVER_STREAMING"
 CLIENT_STREAMING = "CLIENT_STREAMING"
@@ -44,3 +47,33 @@ def split_method_call(handler_call_details):
 
   grpc_service_name, grpc_method_name = parts[1:3]
   return grpc_service_name, grpc_method_name, True
+
+
+def wrap_rpc_behavior(handler, fn):
+  """Returns a new rpc handler that wraps the given function"""
+  if handler is None:
+    return None
+
+  if handler.request_streaming and handler.response_streaming:
+    behavior_fn = handler.stream_stream
+    handler_factory = grpc.stream_stream_rpc_method_handler
+  elif handler.request_streaming and not handler.response_streaming:
+    behavior_fn = handler.stream_unary
+    handler_factory = grpc.stream_unary_rpc_method_handler
+  elif not handler.request_streaming and handler.response_streaming:
+    behavior_fn = handler.unary_stream
+    handler_factory = grpc.unary_stream_rpc_method_handler
+  else:
+    behavior_fn = handler.unary_unary
+    handler_factory = grpc.unary_unary_rpc_method_handler
+  return handler_factory(
+      fn(behavior_fn, handler.request_streaming, handler.response_streaming),
+      request_deserializer=handler.request_deserializer,
+      response_serializer=handler.response_serializer)
+
+
+def compute_error_code(grpc_exception):
+  if isinstance(grpc_exception, grpc.Call):
+    return grpc_exception.code()
+
+  return grpc.StatusCode.UNKNOWN

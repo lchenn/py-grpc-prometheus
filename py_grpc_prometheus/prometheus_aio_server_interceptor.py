@@ -5,7 +5,7 @@ from grpc.aio import ServerInterceptor
 from prometheus_client.registry import REGISTRY
 from py_grpc_prometheus import grpc_utils
 from py_grpc_prometheus import server_metrics
-
+from py_grpc_prometheus.grpc_utils import wrap_rpc_behavior, compute_error_code
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class PromAioServerInterceptor(ServerInterceptor):
             self.increase_grpc_server_handled_total_counter(grpc_type,
                                                             grpc_service_name,
                                                             grpc_method_name,
-                                                            self._compute_error_code(e).name)
+                                                            compute_error_code(e).name)
             raise e
 
           finally:
@@ -115,15 +115,9 @@ class PromAioServerInterceptor(ServerInterceptor):
 
       return new_behavior
     response = await continuation(handler_call_details)
-    optional_any = self._wrap_rpc_behavior(response, metrics_wrapper)
+    optional_any = wrap_rpc_behavior(response, metrics_wrapper)
 
     return optional_any
-
-  def _compute_error_code(self, grpc_exception):
-    if isinstance(grpc_exception, grpc.Call):
-      return grpc_exception.code()
-
-    return grpc.StatusCode.UNKNOWN
 
   def increase_grpc_server_handled_total_counter(
       self, grpc_type, grpc_service_name, grpc_method_name, grpc_code):
@@ -139,25 +133,3 @@ class PromAioServerInterceptor(ServerInterceptor):
           grpc_service=grpc_service_name,
           grpc_method=grpc_method_name,
           grpc_code=grpc_code).inc()
-
-  def _wrap_rpc_behavior(self, handler, fn):
-    """Returns a new rpc handler that wraps the given function"""
-    if handler is None:
-      return None
-
-    if handler.request_streaming and handler.response_streaming:
-      behavior_fn = handler.stream_stream
-      handler_factory = grpc.stream_stream_rpc_method_handler
-    elif handler.request_streaming and not handler.response_streaming:
-      behavior_fn = handler.stream_unary
-      handler_factory = grpc.stream_unary_rpc_method_handler
-    elif not handler.request_streaming and handler.response_streaming:
-      behavior_fn = handler.unary_stream
-      handler_factory = grpc.unary_stream_rpc_method_handler
-    else:
-      behavior_fn = handler.unary_unary
-      handler_factory = grpc.unary_unary_rpc_method_handler
-    return handler_factory(
-        fn(behavior_fn, handler.request_streaming, handler.response_streaming),
-        request_deserializer=handler.request_deserializer,
-        response_serializer=handler.response_serializer)
