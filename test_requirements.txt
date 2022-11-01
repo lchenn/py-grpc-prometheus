@@ -1,6 +1,9 @@
+-r requirements.txt
+
 pylint
 pre-commit
 protobuf
 pytest
 requests
 coverage
+black
