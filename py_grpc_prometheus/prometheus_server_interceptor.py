@@ -82,11 +82,11 @@ class PromServerInterceptor(grpc.ServerInterceptor):
                                                               self._compute_status_code(
                                                                   servicer_context).name)
             return response_or_iterator
-          except grpc.RpcError as e:
+          except Exception as e:
             self.increase_grpc_server_handled_total_counter(grpc_type,
                                                             grpc_service_name,
                                                             grpc_method_name,
-                                                            self._compute_error_code(e).name)
+                                                            self._compute_status_code(servicer_context).name)
             raise e
 
           finally:
