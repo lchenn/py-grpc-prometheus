@@ -16,10 +16,10 @@ class Greeter(hello_world_grpc.GreeterServicer):
 
   def SayHello(self, request, context):
     if request.name == "invalid":
+      context.abort(grpc.StatusCode.INVALID_ARGUMENT, 'Consarnit!')
+    if request.name == "rpcError":
       context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
       context.set_details('Consarnit!')
-      return None
-    if request.name == "rpcError":
       raise grpc.RpcError()
     if request.name == "unknownError":
       raise Exception(request.name)
