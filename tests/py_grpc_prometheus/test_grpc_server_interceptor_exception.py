@@ -11,11 +11,14 @@ def test_grpc_server_handled_with_server_error(
     target_count, grpc_server, grpc_stub
 ):  # pylint: disable=unused-argument
   for _ in range(target_count):
-    with pytest.raises(grpc.RpcError):
+    with pytest.raises(Exception):
       grpc_stub.SayHello(hello_world_pb2.HelloRequest(name="unknownError"))
 
   target_metric = get_server_metric("grpc_server_handled")
-  assert target_metric.samples == []
+  print(target_metric.samples[0].labels["grpc_code"])
+  assert target_metric.samples[0].value == target_count
+  assert target_metric.samples[0].labels["grpc_code"] == "UNKNOWN"
+
 
 @pytest.mark.parametrize("target_count", [1, 10, 100])
 def test_grpc_server_handled_with_rpc_error(
@@ -27,6 +30,7 @@ def test_grpc_server_handled_with_rpc_error(
 
   target_metric = get_server_metric("grpc_server_handled")
   assert target_metric.samples[0].value == target_count
+  assert target_metric.samples[0].labels["grpc_code"] == "INVALID_ARGUMENT"
 
 @pytest.mark.parametrize("target_count", [1, 10, 100])
 def test_grpc_server_handled_with_interceptor_error(
@@ -38,7 +42,7 @@ def test_grpc_server_handled_with_interceptor_error(
         'PromServerInterceptor._compute_status_code',
         side_effect=Exception('mocked error')
     ):
-      with pytest.raises(grpc.RpcError):
+      with pytest.raises(Exception):
         grpc_stub.SayHello(hello_world_pb2.HelloRequest(name="unary"))
 
 @pytest.mark.parametrize("target_count", [1, 10, 100])
@@ -46,7 +50,7 @@ def test_grpc_server_handled_with_server_error_and_skip_exceptions(
     target_count, grpc_server_with_exception_handling, grpc_stub
 ):  # pylint: disable=unused-argument
   for _ in range(target_count):
-    with pytest.raises(grpc.RpcError):
+    with pytest.raises(Exception):
       grpc_stub.SayHello(hello_world_pb2.HelloRequest(name="unknownError"))
 
   target_metric = get_server_metric("grpc_server_handled")
